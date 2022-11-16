@@ -7,7 +7,7 @@ Base = declarative_base()
 
 class Gender(Base):
     __tablename__ = "gender"
-    id = sq.Column(sq.Integer, primary_key=True)
+    id = sq.Column(sq.Integer, primary_key=True, unique=True)
     name = sq.Column(sq.String(length=40), unique=True)
 
 
@@ -15,12 +15,12 @@ class Account(Base):
     __tablename__ = "account"
 
     id = sq.Column(sq.Integer, primary_key=True)
-    vk_id = sq.Column(sq.Integer)
+    vk_id = sq.Column(sq.Integer, unique=True)
     name = sq.Column(sq.String(length=40))
     surname = sq.Column(sq.String(length=40))
     age = sq.Column(sq.Integer)
     gender_id = sq.Column(sq.Integer, sq.ForeignKey("gender.id"))
-    city = sq.Column(sq.String(length=40), unique=True)
+    city = sq.Column(sq.String(length=40))
     profile_link = sq.Column(sq.String(length=100))
 
     gender = relationship(Gender, backref='account')
@@ -74,12 +74,14 @@ if __name__ == '__main__':
     session = Session()
 
     # Наполняем
-    # gender = Gender(name='Male')
-    # # account = Account(vk_id=1, name='Vladimir', surname='Putin', age=30, gender_id=1, city='St. Pet',
-    # #                   profile_link='www.leningrad.ru')
-    # session.add(gender)
-    # # session.add(account)
-    # session.commit()
+    gender = Gender(name='Male')
+    session.add(gender)
+    session.commit()
+
+    account = Account(vk_id=1, name='Vladimir', surname='Putin', age=30, gender_id=1, city='St. Pet',
+                      profile_link='www.leningrad.ru')
+    session.add(account)
+    session.commit()
 
     # Закрываем сессию
     session.close()
