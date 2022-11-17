@@ -1,2 +1,5 @@
 vk-api==11.9.9
 
+
+SQLAlchemy~=1.4.44
+config~=0.5.1
