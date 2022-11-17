@@ -6,8 +6,8 @@ from pprint import pprint
 import datetime
 
 
-user_token = "vk1.a.jRn_RRJV-FjTvWbt8cRNjTLw14EqOzk77rLuYuLIdHBYdyWj4Mi1GsXk_Sj8-WDD8YztyaEHEsLt8spT_VcG7q45GERAoWv7qD_YxpTfjdGKW4yRXgwk8ajpOysQ6c_Ov7__xpshmIv4FLAzlcOqY652aytGiU0XSMPUEbIxNe5BPhoA0kI-zs_5M_ZUOwZs"
-group_token = "vk1.a.tuocZ2TPyOLkMOvKD_Ml2CKIomMLyHrUMo8v2QfG6c2PBsJPRbo-R9-uMugnReaSIKjM706ghxhXh_dmJd0O52cd1LY2gShiE9gcKdw8eMdMroIRO2tnA41S6mgXOW6o3H6o3bkux_YLEdtrS7Ch-FYQ1vTKftPPW5b5ZpiCU3CdQ5WChMzKrf3ZsFwQN1vrm36Q-Bh301lH_zlw6TbisA"
+user_token = "токен пользователя"
+group_token = "токен группы"
 group_session = vk_api.VkApi(token=group_token)
 session_api = group_session.get_api()
 longpool = VkLongPoll(group_session)
