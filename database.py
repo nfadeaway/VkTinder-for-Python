@@ -25,6 +25,9 @@ class Account(Base):
 
     gender = relationship(Gender, backref='account')
 
+    def __str__(self):
+        return f'{self.id}: {self.name}'
+
 
 class Photo(Base):
     __tablename__ = "photo"
@@ -41,6 +44,9 @@ class Favorite(Base):
     vk_id = sq.Column(sq.Integer, sq.ForeignKey("account.vk_id"))
 
     account_favorite = relationship(Account, backref='favorite')
+
+    def __str__(self):
+        return f'{self.id}: {self.vk_id}'
 
 
 class Blacklist(Base):
@@ -82,6 +88,19 @@ if __name__ == '__main__':
                       profile_link='www.leningrad.ru')
     session.add(account)
     session.commit()
+
+    favorite = Favorite(vk_id=1)
+    session.add(favorite)
+    session.commit()
+
+    #если нужны данные из списка фавор, например
+    request = session.query(Account, Favorite).join(Favorite, Favorite.vk_id == Account.vk_id).all()
+    for a, b in request:
+        print(a.name, b.vk_id)
+
+    #если нужно достать из основной таблицы URL аккаунта с VK_ID=1
+    request = session.query(Account.profile_link).filter_by(vk_id=1).all()
+    print(request)
 
     # Закрываем сессию
     session.close()
