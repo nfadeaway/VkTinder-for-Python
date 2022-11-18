@@ -33,7 +33,8 @@ class Account(Base):
     gender = relationship(Gender, backref='account')
 
     def __str__(self):
-        return f'{self.id}: {self.name}'
+        return f'ID: {self.id} VK_ID{self.vk_id} Name:{self.name} Surname:{self.surname} Age:{self.age} ' \
+               f'Gender_id:{self.gender} City:{self.city} Status_id:{self.status_id} Profile_link:{self.profile_link}'
 
 
 class Photo(Base):
@@ -44,27 +45,37 @@ class Photo(Base):
 
     photo = relationship(Account, backref='photo')
 
+
 # дропаем все таблицы
 def drop_tables(engine):
     Base.metadata.drop_all(engine)
+
 
 # создаём все таблицы
 def create_tables(engine):
     Base.metadata.create_all(engine)
 
+
 # наполняем полами
-def genderfiller(session, gender_list: list):
+def gender_filler(session, gender_list: list):
     for i in gender_list:
         gender = Gender(name=i)
         session.add(gender)
         session.commit()
 
+
 # наполняем статусами
-def statusfiller(session, status_list: list):
+def status_filler(session, status_list: list):
     for i in status_list:
         status = Status(name=i)
         session.add(status)
         session.commit()
+
+
+# смена статуса по VK_ID
+def status_changer(session, vk_id, new_status_id):
+    request = session.query(Account).filter(account.vk_id == vk_id).one()
+    request.status = new_status_id
 
 
 if __name__ == '__main__':
@@ -83,12 +94,11 @@ if __name__ == '__main__':
 
     # Наполняем полами
     gender_list = ["Male", "Female"]
-    genderfiller(session, gender_list)
+    gender_filler(session, gender_list)
 
     # Наполняем статусами
     status_list = ["unwatched", "watched", "favorite", "blacklist"]
-    statusfiller(session, status_list)
-
+    status_filler(session, status_list)
 
     # Пример добавления
     account = Account(vk_id=1, name='Vladimir', surname='Putin', age=30, gender_id=1, city='St. Pet',
@@ -99,13 +109,13 @@ if __name__ == '__main__':
     # если нужны данные cо статусами 1
     request = session.query(Account).filter_by(status_id=1).all()
     for i in request:
-        print(i.name)
+        pass
+
+    #если нужна одна запись
+    request = session.query(Account).filter_by(status_id=1).one()
 
     # если нужно изменить данные в определенной записи
-    request = session.query(Account).filter(account.id==1).one()
-    request.status = 2
-    print(request.status)
-
+    status_changer(session, vk_id=1, new_status_id=2)
 
     # Закрываем сессию
     session.close()
