@@ -3,3 +3,4 @@ venv/
 database.py
 config.py
 private/
+models/__pycache__/

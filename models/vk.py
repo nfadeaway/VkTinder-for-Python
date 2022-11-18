@@ -3,11 +3,8 @@ from vk_api.longpoll import VkLongPoll, VkEventType
 import datetime
 import time
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
-from pprint import pprint
-
 
 class VK:
-
     def __init__(self, user_token, group_token):
         self.user_token = user_token
         self.group_token = group_token
@@ -45,7 +42,7 @@ class VK:
         vk = vk_api.VkApi(token=self.user_token)
         api = vk.get_api()
         year = datetime.datetime.today().year
-        search = api.users.search(count=20,
+        search = api.users.search(count=50,
                                   sex="1" if sex == 2 else "2",
                                   city=city, age_from=str(year-age-3),
                                   age_to=str(year - age + 2),
@@ -101,14 +98,15 @@ class VK:
                     users = self.user_search(city, sex, age)['items']
                     user_for_db = []
                     for user in users:
-                        if user["is_closed"] is False:
+                        if user["is_closed"] is False and 'city' in user:
                             photo_list = self.get_photo(user["id"])
-                            if photo_list["count"] > 2 :
+                            if photo_list["count"] > 2:
                                 users_photo = self.preview_photo(photo_list)
                                 self.send_some_msg(id, f'Имя - {user["first_name"]} {user["last_name"]}\n '
                                                        f'Ссылка - https://vk.com/id{user["id"]}\n'
                                                        f'Пол - {user["sex"]}\n'
                                                        f'ID - {user["id"]}\n'
+                                                       f"Код города - {user['city']['id']}\n"
                                                        f'Фото:\n{users_photo}', keyboard)
                                 year = datetime.datetime.today().year
                                 user_for_db.append({"vk_id": user["id"],
@@ -116,9 +114,11 @@ class VK:
                                                "surname": user["last_name"],
                                                "age": year - int(user["bdate"].split(".")[-1]),
                                                "gender_id":user["sex"],
-                                               "city": user['city']['id'],
-                                               "profile_link": 'https://vk.com/id'+str(user["id"])})
+                                               "city_id": user['city']['id'],
+                                               "profile_link": 'https://vk.com/id'+str(user["id"]),
+                                               "photo_link": users_photo})
                                 time.sleep(0.5)
+                                print(user_for_db)
 
                 elif msg == "profile":
                     self.send_some_msg(id, f'Ваше имя - {profile_list["name"]}\n'
