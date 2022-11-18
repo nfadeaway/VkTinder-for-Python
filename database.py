@@ -27,7 +27,7 @@ class Account(Base):
     age = sq.Column(sq.Integer)
     gender_id = sq.Column(sq.Integer, sq.ForeignKey("gender.id"))
     city = sq.Column(sq.String(length=40))
-    status = sq.Column(sq.Integer, sq.ForeignKey("status.id"))
+    status_id = sq.Column(sq.Integer, sq.ForeignKey("status.id"))
     profile_link = sq.Column(sq.String(length=100))
 
     gender = relationship(Gender, backref='account')
@@ -92,12 +92,12 @@ if __name__ == '__main__':
 
     # Пример добавления
     account = Account(vk_id=1, name='Vladimir', surname='Putin', age=30, gender_id=1, city='St. Pet',
-                      profile_link='www.leningrad.ru', status=1)
+                      profile_link='www.leningrad.ru', status_id=1)
     session.add(account)
     session.commit()
 
     # если нужны данные cо статусами 1
-    request = session.query(Account).filter_by(status=1).all()
+    request = session.query(Account).filter_by(status_id=1).all()
     for i in request:
         print(i.name)
 
