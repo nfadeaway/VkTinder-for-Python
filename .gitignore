@@ -1,6 +1,6 @@
 .idea/
 venv/
-database.py
 config.py
+.env
 private/
-models/__pycache__/
+vk/__pycache__/
