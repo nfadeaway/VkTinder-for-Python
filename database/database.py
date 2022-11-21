@@ -37,7 +37,7 @@ class Accounts(Base):
     city_title = sq.Column(sq.String(length=40))
     status = sq.Column(sq.String(length=30))
     profile_link = sq.Column(sq.String(length=100))
-    id_vkinder_user = sq.Column(sq.Integer, sq.ForeignKey('vkinder_users.vkinder_id'))
+    vkinder_user_id = sq.Column(sq.Integer, sq.ForeignKey('vkinder_users.vkinder_id'))
 
     gender = relationship(Genders, backref='accounts')
 
