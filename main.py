@@ -13,7 +13,7 @@ from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 load_dotenv()
 
 def main():
-    # Все настройки хрянятся в файле .env в папке с модулем main.py
+    # Все настройки хранятся в файле .env в папке с модулем main.py
     # USER_TOKEN='ТОКЕН'
     # GROUP_TOKEN='GROUP_TOKEN'
     # DSN='postgresql://postgres:55555@localhost:5432/vkinder'
