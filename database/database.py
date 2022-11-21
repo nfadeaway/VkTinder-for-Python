@@ -15,7 +15,7 @@ class Genders(Base):
 class Vkinder_users(Base):
     __tablename__ = 'vkinder_users'
     vkinder_id = sq.Column(sq.Integer, primary_key=True)
-    vk_id = sq.Column(sq.Integer, sq.ForeignKey('accounts.vk_id'), nullable=False)
+    vk_id = sq.Column(sq.Integer, nullable=False, unique=True)
 
 
 # class Status(Base):
@@ -37,7 +37,7 @@ class Accounts(Base):
     city_title = sq.Column(sq.String(length=40))
     status = sq.Column(sq.String(length=30))
     profile_link = sq.Column(sq.String(length=100))
-    vkinder_user_id = sq.Column(sq.Integer, sq.ForeignKey('vkinder_users.vkinder_id'))
+    vkinder_user_id = sq.Column(sq.Integer, sq.ForeignKey('vkinder_users.vk_id'))
 
     gender = relationship(Genders, backref='accounts')
 
@@ -72,6 +72,10 @@ def create_tables(engine) -> None:
 def gender_filler(session) -> None:
     session.add(Genders(gender_name='женский'))
     session.add(Genders(gender_name='мужской'))
+    session.commit()
+
+def id_filler(session, id) -> None:
+    session.add(Vkinder_users(vk_id=id))
     session.commit()
 
 
