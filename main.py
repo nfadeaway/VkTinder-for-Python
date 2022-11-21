@@ -2,7 +2,7 @@ import sqlalchemy
 import psycopg2
 from dotenv import load_dotenv
 import os
-from database.database import drop_tables, create_tables, gender_filler, Accounts, Photos, status_changer
+from database.database import drop_tables, create_tables, gender_filler, id_filler, Accounts, Photos, status_changer
 from sqlalchemy.orm import sessionmaker
 
 from vk.vk import VK, preview_photos
@@ -54,6 +54,7 @@ def main():
                 vkinder_user_city_title = vkinder_user_info['city_title']
                 vkinder_user_sex = vkinder_user_info['sex']
                 vkinder_user_age = vkinder_user_info['age']
+                id_filler(session, vkinder_user_id)
 
                 # Обрабатываем отсутствие даты рождения у пользователя VKinder
                 if vkinder_user_age == '':
@@ -153,7 +154,8 @@ def main():
                                                                   city_id=user['city']['id'],
                                                                   city_title=user['city']['title'],
                                                                   status='blacklist',
-                                                                  profile_link=f'https://vk.com/id{user["id"]}')
+                                                                  profile_link=f'https://vk.com/id{user["id"]}',
+                                                                  vkinder_user_id=vkinder_user_id)
                                         session.add(account_for_db)
                                         session.commit()
                                         vkinder_user.send_some_msg(vkinder_user_id, 'Человек добавлен в ЧС!')
@@ -181,7 +183,8 @@ def main():
                                                               city_id=user['city']['id'],
                                                               city_title=user['city']['title'],
                                                               status='favorites',
-                                                              profile_link=f'https://vk.com/id{user["id"]}')
+                                                              profile_link=f'https://vk.com/id{user["id"]}',
+                                                              vkinder_user_id=vkinder_user_id)
                                     session.add(account_for_db)
                                     for i in range(len(user_photos)):
                                         photos_for_db = Photos(vk_id=user['id'],
