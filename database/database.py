@@ -1,5 +1,6 @@
 import sqlalchemy as sq
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+
 # from config import DSN
 
 Base = declarative_base()
@@ -9,6 +10,12 @@ class Genders(Base):
     __tablename__ = 'genders'
     gender_id = sq.Column(sq.Integer, primary_key=True)
     gender_name = sq.Column(sq.String(length=20), unique=True)
+
+
+class Vkinder_users(Base):
+    __tablename__ = 'vkinder_users'
+    vkinder_id = sq.Column(sq.Integer, primary_key=True)
+    vk_id = sq.Column(sq.Integer, sq.ForeignKey('accounts.vk_id'), nullable=False)
 
 
 # class Status(Base):
@@ -30,11 +37,12 @@ class Accounts(Base):
     city_title = sq.Column(sq.String(length=40))
     status = sq.Column(sq.String(length=30))
     profile_link = sq.Column(sq.String(length=100))
+    vkinder_user_id = sq.Column(sq.Integer, sq.ForeignKey('vkinder_users.vkinder_id'))
 
     gender = relationship(Genders, backref='accounts')
 
     def __str__(self):
-        return f'ID: {self. account_id}, VK_ID{self.vk_id}, Name:{self.name}, Surname:{self.surname}, ' \
+        return f'ID: {self.account_id}, VK_ID{self.vk_id}, Name:{self.name}, Surname:{self.surname}, ' \
                f'Age:{self.age}, Gender_id:{self.gender_id}, City_id:{self.city_id}, City_name:{self.city_name}, ' \
                f'Status_id:{self.status_id} Profile_link:{self.profile_link}'
 
@@ -46,6 +54,7 @@ class Photos(Base):
     photo_attachment = sq.Column(sq.String(length=200))
 
     accounts = relationship(Accounts, backref='photos')
+
 
 
 # дропаем все таблицы
@@ -66,12 +75,12 @@ def gender_filler(session) -> None:
     session.commit()
 
 
-# наполняем статусами
-def status_filler(session, status_list: list) -> None:
-    for i in status_list:
-        status = Status(name=i)
-        session.add(status)
-        session.commit()
+# # наполняем статусами
+# def status_filler(session, status_list: list) -> None:
+#     for i in status_list:
+#         status = Status(name=i)
+#         session.add(status)
+#         session.commit()
 
 
 # смена статуса по VK_ID
@@ -79,7 +88,6 @@ def status_changer(session, vk_id: int, new_status: str) -> None:
     request = session.query(Accounts).filter(Accounts.vk_id == vk_id).one()
     request.status = new_status
     session.commit()
-
 
 # if __name__ == '__main__':
 #     # Создаём движок
