@@ -202,7 +202,7 @@ def main():
                                 elif inner_incoming_msg == 'показать избранное':
 
                                     vkinder_user.send_some_msg(vkinder_user_id, 'Просмотр Избранного!')
-                                    request = session.query(Accounts).filter_by(status='favorites').all()
+                                    request = session.query(Accounts).filter_by(status='favorites', vkinder_user_id=vkinder_user_id).all()
                                     for row in request:
                                         vkinder_user.send_some_msg(vkinder_user_id,
                                                                    f'{row.name} {row.surname}, {row.age}, '
