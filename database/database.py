@@ -56,11 +56,6 @@ class Photos(Base):
     accounts = relationship(Accounts, backref='photos')
 
 
-class VKinder_users(Base):
-    __tablename__ = 'VKinder_users'
-    user_id = sq.Column(sq.Integer, primary_key=True)
-    vk_id = sq.Column(sq.Integer, sq.ForeignKey('accounts.vk_id'), nullable=False)
-
 
 # дропаем все таблицы
 def drop_tables(engine) -> None:
