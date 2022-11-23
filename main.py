@@ -108,6 +108,10 @@ def listener(self_id, session):
         black_list.append(raw.watched_vk_id)
 
     for user in found_user['items']:
+        if user_dict[self_id] == 1:
+            send_message(vk_group_session, self_id, text="Для начала работы нажмите начать.",
+                         keyboard=welcome_keyboard.get_keyboard())
+            break
 
         if user["id"] in black_list:
             send_message(vk_group_session, self_id, "попался аккаунт из черного списка, ищем дальше...")
