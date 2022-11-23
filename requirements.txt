@@ -11,4 +11,3 @@ setuptools==60.2.0
 SQLAlchemy==1.4.44
 urllib3==1.26.12
 vk-api==11.9.9
-wheel==0.37.1
