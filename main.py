@@ -1,9 +1,9 @@
 from dotenv import load_dotenv
 import os
-from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
+from vk_api.bot_longpoll import VkBotEventType
 from vk.vk import VK
 from threading import Thread
-from database.database import Status, User, Preferences, drop_tables, create_tables, status_filler
+from database.database import User, Preferences
 import sqlalchemy as sq
 from sqlalchemy.orm import sessionmaker
 
@@ -13,8 +13,12 @@ user_dict = {}
 vk = VK()
 
 def listener(self_id, session):
-    session.add(User(vk_id=self_id))
-    session.commit()
+    user = session.query(User).filter_by(vk_id=self_id).all()
+    if user:
+        pass
+    else:
+        session.add(User(vk_id=self_id))
+        session.commit()
 
     vkinder_user_info = vk.profile_info(self_id)
     vkinder_user_city = vkinder_user_info['city']
@@ -23,6 +27,7 @@ def listener(self_id, session):
 
 
     regular_keyboard = vk.keyboard()[1]
+    welcome_keyboard = vk.keyboard()[0]
 
     if vkinder_user_age == '':
         vk.send_message(vk.vk_group_session, self_id, "Не могу понять, сколько тебе лет, напиши для более точного подбора.")
@@ -52,6 +57,11 @@ def listener(self_id, session):
         black_list.append(raw.watched_vk_id)
 
     for user in found_user['items']:
+
+        if user_dict[self_id] == 1:
+            vk.send_message(vk.vk_group_session, self_id, text="Для начала работы нажмите начать.",
+                            keyboard=welcome_keyboard.get_keyboard())
+            break
 
         if user["id"] in black_list:
             vk.send_message(vk.vk_group_session, self_id, "попался аккаунт из черного списка, ищем дальше...")
@@ -123,11 +133,10 @@ def listener(self_id, session):
 
 def main():
     engine = sq.create_engine(os.getenv('DSN'))
-    drop_tables(engine)
-    create_tables(engine)
+
     Session = sessionmaker(bind=engine)
     session = Session()
-    status_filler(session)
+
 
     welcome_keyboard = vk.keyboard()[0]
 

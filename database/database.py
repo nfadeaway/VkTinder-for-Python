@@ -1,5 +1,10 @@
 import sqlalchemy as sq
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+from dotenv import load_dotenv
+import os
+load_dotenv()
+
 
 Base = declarative_base()
 
@@ -35,7 +40,10 @@ class Preferences(Base):
     watched_vk_id = sq.Column(sq.Integer)
     status_id = sq.Column(sq.Integer, sq.ForeignKey('status.id'))
 
-
-
 if __name__ == '__main__':
-    pass
+    engine = sq.create_engine(os.getenv('DSN'))
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    drop_tables(engine)
+    create_tables(engine)
+    status_filler(session)
