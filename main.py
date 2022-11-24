@@ -12,6 +12,7 @@ load_dotenv()
 user_dict = {}
 vk = VK()
 
+
 def listener(self_id, session):
     user = session.query(User).filter_by(vk_id=self_id).all()
     if user:
@@ -25,12 +26,12 @@ def listener(self_id, session):
     vkinder_user_sex = vkinder_user_info['sex']
     vkinder_user_age = vkinder_user_info['age']
 
-
     regular_keyboard = vk.keyboard()[1]
     welcome_keyboard = vk.keyboard()[0]
 
     if vkinder_user_age == '':
-        vk.send_message(vk.vk_group_session, self_id, "Не могу понять, сколько тебе лет, напиши для более точного подбора.")
+        vk.send_message(vk.vk_group_session, self_id,
+                        "Не могу понять, сколько тебе лет, напиши для более точного подбора.")
         for event in vk.longpoll.listen():
             if event.type == VkBotEventType.MESSAGE_NEW:
                 if self_id == event.obj.message["from_id"]:
@@ -40,21 +41,21 @@ def listener(self_id, session):
                         break
                     else:
                         vk.send_message(vk.vk_group_session, self_id,
-                                     "Пока не введёшь нормальный возраст, ничего не получится.")
+                                        "Пока не введёшь нормальный возраст, ничего не получится.")
 
     count = 100
     age_step = 3
     found_user = vk.vk_user.users.search(count=count, sex='1' if vkinder_user_sex == '2' else '2',
-                                      city=vkinder_user_city, age_from=str(int(vkinder_user_age) + age_step),
-                                      age_to=str(int(vkinder_user_age) + age_step), has_photo='1',
-                                      status='6', fields="city, bdate, sex")
+                                         city=vkinder_user_city, age_from=str(int(vkinder_user_age) + age_step),
+                                         age_to=str(int(vkinder_user_age) + age_step), has_photo='1',
+                                         status='6', fields="city, bdate, sex")
 
-    black_list = []
-
-    request_blacklist = session.query(Preferences).filter_by(vk_id=self_id, status_id=2).all()
-
-    for raw in request_blacklist:
-        black_list.append(raw.watched_vk_id)
+    # black_list = []
+    #
+    # request_blacklist = session.query(Preferences).filter_by(vk_id=self_id, status_id=2).all()
+    #
+    # for raw in request_blacklist:
+    #     black_list.append(raw.watched_vk_id)
 
     for user in found_user['items']:
 
@@ -63,9 +64,15 @@ def listener(self_id, session):
                             keyboard=welcome_keyboard.get_keyboard())
             break
 
-        if user["id"] in black_list:
-            vk.send_message(vk.vk_group_session, self_id, "попался аккаунт из черного списка, ищем дальше...")
+        request_preferences = session.query(Preferences).filter_by(vk_id=self_id, watched_vk_id=user["id"]).all()
+
+        if request_preferences:
+            vk.send_message(vk.vk_group_session, self_id, "попался аккаунт из списка предпочтений, ищем дальше...")
             continue
+
+        # if user["id"] in black_list:
+        #     vk.send_message(vk.vk_group_session, self_id, "попался аккаунт из черного списка, ищем дальше...")
+        #     continue
 
         if user['is_closed']:
             vk.send_message(vk.vk_group_session, self_id, "попался закрытый аккаунт, ищем дальше...")
@@ -75,10 +82,10 @@ def listener(self_id, session):
         if user_photo_list['count'] > 2:
             user_photos = vk.preview_photos(user_photo_list)
             vk.send_message(vk.vk_group_session, self_id, f'{user["first_name"]} {user["last_name"]}\n'
-                                                    f'https://vk.com/id{user["id"]}\n',
-                         f'photo{user["id"]}_{user_photos[0][0]},'
-                         f'photo{user["id"]}_{user_photos[1][0]},'
-                         f'photo{user["id"]}_{user_photos[2][0]}', keyboard=regular_keyboard.get_keyboard())
+                                                          f'https://vk.com/id{user["id"]}\n',
+                            f'photo{user["id"]}_{user_photos[0][0]},'
+                            f'photo{user["id"]}_{user_photos[1][0]},'
+                            f'photo{user["id"]}_{user_photos[2][0]}', keyboard=regular_keyboard.get_keyboard())
         else:
             vk.send_message(vk.vk_group_session, self_id, "у пользователя недостаточно фото, ищем дальше...")
             continue
@@ -88,24 +95,24 @@ def listener(self_id, session):
                 if self_id == event.obj.message["from_id"]:
                     if event.obj.message["text"].lower() == "дальше":
                         vk.send_message(vk.vk_group_session, event.obj.message["from_id"], text="ожидай...",
-                                     keyboard=regular_keyboard.get_keyboard())
+                                        keyboard=regular_keyboard.get_keyboard())
                         break
 
                     if event.obj.message["text"].lower() == "в избранное":
                         session.add(Preferences(vk_id=self_id, watched_vk_id=user["id"], status_id=1))
                         session.commit()
                         vk.send_message(vk.vk_group_session, event.obj.message["from_id"],
-                                     text="добавили в избранное, ищем дальше...",
-                                     keyboard=regular_keyboard.get_keyboard())
+                                        text="добавили в избранное, ищем дальше...",
+                                        keyboard=regular_keyboard.get_keyboard())
                         break
 
                     if event.obj.message["text"].lower() == "в чс":
                         session.add(Preferences(vk_id=self_id, watched_vk_id=user["id"], status_id=2))
                         session.commit()
                         vk.send_message(vk.vk_group_session, event.obj.message["from_id"],
-                                     text="добавили в ЧС, ищем дальше...",
-                                     keyboard=regular_keyboard.get_keyboard())
-                        black_list.append(user["id"])
+                                        text="добавили в ЧС, ищем дальше...",
+                                        keyboard=regular_keyboard.get_keyboard())
+                        # black_list.append(user["id"])
                         break
 
                     if event.obj.message["text"].lower() == "моё избранное":
@@ -115,14 +122,14 @@ def listener(self_id, session):
                             first_name = data[0]['first_name']
                             last_name = data[0]['last_name']
                             user_photo_list = vk.vk_user.photos.get(owner_id=user.watched_vk_id, album_id="profile",
-                                                                 extended=1)
+                                                                    extended=1)
                             user_photos = vk.preview_photos(user_photo_list)
                             vk.send_message(vk.vk_group_session, self_id, f'{first_name} {last_name}\n'
-                                                                    f'https://vk.com/id{user.watched_vk_id}\n',
-                                         f'photo{user.watched_vk_id}_{user_photos[0][0]},'
-                                         f'photo{user.watched_vk_id}_{user_photos[1][0]},'
-                                         f'photo{user.watched_vk_id}_{user_photos[2][0]}',
-                                         keyboard=regular_keyboard.get_keyboard())
+                                                                          f'https://vk.com/id{user.watched_vk_id}\n',
+                                            f'photo{user.watched_vk_id}_{user_photos[0][0]},'
+                                            f'photo{user.watched_vk_id}_{user_photos[1][0]},'
+                                            f'photo{user.watched_vk_id}_{user_photos[2][0]}',
+                                            keyboard=regular_keyboard.get_keyboard())
                         continue
 
                     elif event.obj.message["text"] == "выход":
@@ -137,22 +144,21 @@ def main():
     Session = sessionmaker(bind=engine)
     session = Session()
 
-
     welcome_keyboard = vk.keyboard()[0]
-
 
     for event in vk.longpoll.listen():
         if event.type == VkBotEventType.MESSAGE_NEW:
 
             if event.obj.message["from_id"] not in user_dict:
-                vk.send_message(vk.vk_group_session, event.obj.message["from_id"], text="Для начала работы нажмите начать.",
-                             keyboard=welcome_keyboard.get_keyboard())
+                vk.send_message(vk.vk_group_session, event.obj.message["from_id"],
+                                text="Для начала работы нажмите начать.",
+                                keyboard=welcome_keyboard.get_keyboard())
                 user_dict[event.obj.message["from_id"]] = 1
 
             if event.obj.message["text"].lower() == "мои данные" and user_dict[event.obj.message["from_id"]] == 1:
                 self_id = event.obj.message["from_id"]
                 vk.send_message(vk.vk_group_session, event.obj.message["from_id"], text=self_id,
-                             keyboard=welcome_keyboard.get_keyboard())
+                                keyboard=welcome_keyboard.get_keyboard())
 
             elif event.obj.message["text"].lower() == "начать" and user_dict[event.obj.message["from_id"]] == 1:
                 self_id = event.obj.message["from_id"]
