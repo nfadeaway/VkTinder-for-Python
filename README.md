@@ -10,7 +10,7 @@
 #### Для запуска проекта на вашем ПК вам понадобится:
 - Персональный токен VK (<code>[описание метода его получения](https://dev.vk.com/api/access-token/getting-started "ссылка на dev vk библиотеку")</code>)
 - Токен сообщества VK (<code>[описание метода его получения](https://dev.vk.com/api/access-token/getting-started "ссылка на dev vk библиотеку")</code>)
-- Сервер базы данных PSQL (<code>[https://www.postgresql.org/](https://www.postgresql.org/ "ссылка на postgresql")</code>)
+- Сервер базы данных <code>[PSQL](https://www.postgresql.org/ "ссылка на postgresql")</code>
 - Бот использует библиотеку <code>[DotEnv](https://habr.com/ru/post/472674/ "ссылка на статью по DotEnv")</code> для получения переменных из окружения, для его работы в корне вашего проекта необходимо создать файл окружения ".env" формата:
     -  USER_TOKEN='Персональный токен' 
     -  GROUP_TOKEN=' Токен собобщества' 
