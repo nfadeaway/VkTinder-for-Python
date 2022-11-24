@@ -6,6 +6,7 @@ from threading import Thread
 from database.database import User, Preferences
 import sqlalchemy as sq
 from sqlalchemy.orm import sessionmaker
+import random
 
 load_dotenv()
 
@@ -50,14 +51,30 @@ def listener(self_id, session):
                                          age_to=str(int(vkinder_user_age) + age_step), has_photo='1',
                                          status='6', fields="city, bdate, sex")
 
-    # black_list = []
-    #
-    # request_blacklist = session.query(Preferences).filter_by(vk_id=self_id, status_id=2).all()
-    #
-    # for raw in request_blacklist:
-    #     black_list.append(raw.watched_vk_id)
+    user_list = found_user['items']
 
-    for user in found_user['items']:
+    if user_list:
+        pass
+    else:
+        vk.send_message(vk.vk_group_session, self_id, "Тебе пары не нашлось, попробуй скорректировать свои данные.",
+                        keyboard=welcome_keyboard.get_keyboard())
+        user_dict[self_id] = 1
+        return
+
+    random.shuffle(user_list)
+
+    user_list_len = len(user_list) + 1
+
+    for user in user_list:
+
+        user_list_len -= 1
+
+        if user_list_len == 1:
+            vk.send_message(vk.vk_group_session, self_id,
+                            text="Это был последний кандидат в подборе, можем начать заново.",
+                            keyboard=welcome_keyboard.get_keyboard())
+            user_dict[self_id] = 1
+            break
 
         if user_dict[self_id] == 1:
             vk.send_message(vk.vk_group_session, self_id, text="Для начала работы нажмите начать.",
@@ -69,10 +86,6 @@ def listener(self_id, session):
         if request_preferences:
             vk.send_message(vk.vk_group_session, self_id, "попался аккаунт из списка предпочтений, ищем дальше...")
             continue
-
-        # if user["id"] in black_list:
-        #     vk.send_message(vk.vk_group_session, self_id, "попался аккаунт из черного списка, ищем дальше...")
-        #     continue
 
         if user['is_closed']:
             vk.send_message(vk.vk_group_session, self_id, "попался закрытый аккаунт, ищем дальше...")
@@ -112,7 +125,6 @@ def listener(self_id, session):
                         vk.send_message(vk.vk_group_session, event.obj.message["from_id"],
                                         text="добавили в ЧС, ищем дальше...",
                                         keyboard=regular_keyboard.get_keyboard())
-                        # black_list.append(user["id"])
                         break
 
                     if event.obj.message["text"].lower() == "моё избранное":
@@ -166,10 +178,6 @@ def main():
                 user_dict[event.obj.message["from_id"]] = 2
                 inner_listen = Thread(target=listener, args=(self_id, session))
                 inner_listen.start()
-
-            # else:
-            #     if user_dict[event.obj.message["from_id"]] == 1:
-            #         send_message(vk_group_session, event.obj.message["from_id"], text="неизвестно")
 
 
 if __name__ == "__main__":
