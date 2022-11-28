@@ -30,7 +30,7 @@ class VK:
         return user_list
 
 
-    def preview_photos(self, user_photo_list: list) -> list:
+    def preview_photos(self, user_photo_list: dict) -> list:
         preview_photo_list = [
             {'photo_id': photo['id'], 'likes': photo['likes']['count'],
              'photo_link': [sizes['url'] for sizes in photo['sizes']][-1]}
