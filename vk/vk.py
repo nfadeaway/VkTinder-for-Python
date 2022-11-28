@@ -8,6 +8,7 @@ import os
 
 load_dotenv()
 
+
 class VK:
 
     def __init__(self):
@@ -21,14 +22,14 @@ class VK:
         first_search = []
         for age_differ in range(step, -step + 1):
             first_search.extend(self.vk_user.users.search(count=count, sex='1' if sex == '2' else '2',
-                                                     city=city,
-                                                     age_from=str(int(age) + age_differ),
-                                                     age_to=str(int(age) + age_differ), has_photo='1',
-                                                     status='6', fields="city, bdate, sex")['items'])
+                                                          city=city,
+                                                          age_from=str(int(age) + age_differ),
+                                                          age_to=str(int(age) + age_differ), has_photo='1',
+                                                          status='6', fields="city, bdate, sex")['items'])
 
-        user_list = [user for user in [user for user in first_search if user['is_closed'] is False and 'city' in user] if str(user['city']['id']) == city]
+        user_list = [user for user in [user for user in first_search if user['is_closed'] is False and 'city' in user]
+                     if str(user['city']['id']) == city]
         return user_list
-
 
     def preview_photos(self, user_photo_list: dict) -> list:
         preview_photo_list = [
@@ -50,7 +51,7 @@ class VK:
 
     def profile_info(self, vkinder_user_id: int) -> dict:
         user = self.vk_group_session.method('users.get', {'user_ids': vkinder_user_id,
-                                                     'fields': 'sex, bdate, city, relation'})
+                                                          'fields': 'sex, bdate, city, relation'})
         name = f'{user[0]["first_name"]} {user[0]["last_name"]}'
         sex = user[0]['sex']
         if 'bdate' in user[0]:
