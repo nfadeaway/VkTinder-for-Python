@@ -36,20 +36,18 @@ def listener(self_id, session):
         for event in vk.longpoll.listen():
             if event.type == VkBotEventType.MESSAGE_NEW:
                 if self_id == event.obj.message["from_id"]:
-                    if event.obj.message["text"].isdigit() and int(event.obj.message["text"]) > 0 and int(
-                            event.obj.message["text"]) < 100:
+                    if event.obj.message["text"].isdigit() and int(event.obj.message["text"]) > 17 and int(
+                            event.obj.message["text"]) < 101:
                         vkinder_user_age = int(event.obj.message["text"])
                         break
                     else:
                         vk.send_message(vk.vk_group_session, self_id,
-                                        "Пока не введёшь нормальный возраст, ничего не получится.")
+                                        "Пока не введёшь нормальный возраст, ничего не получится. (доступный диапазон 18-100)")
 
     count = 100
     user_list = vk.search(vkinder_user_sex,vkinder_user_city, vkinder_user_age, count)
 
-    if user_list:
-        pass
-    else:
+    if not user_list:
         vk.send_message(vk.vk_group_session, self_id, "Тебе пары не нашлось, попробуй скорректировать свои данные.\nМожет ты не указал свой город в личном профиле?",
                         keyboard=welcome_keyboard.get_keyboard())
         user_dict[self_id] = 1
