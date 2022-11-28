@@ -19,13 +19,14 @@ class VK:
 
     def search(self, sex, city, age, count=1000, step=-3):
         first_search = []
-        while step < 3:
+        for age_differ in range(step, -step + 1):
+            print(age_differ)
             first_search.extend(self.vk_user.users.search(count=count, sex='1' if sex == '2' else '2',
                                                      city=city,
-                                                     age_from=str(int(age) + step),
-                                                     age_to=str(int(age) + step), has_photo='1',
+                                                     age_from=str(int(age) + age_differ),
+                                                     age_to=str(int(age) + age_differ), has_photo='1',
                                                      status='6', fields="city, bdate, sex")['items'])
-            step += 1
+
         user_list = [user for user in [user for user in first_search if user['is_closed'] is False and 'city' in user] if str(user['city']['id']) == city]
         return user_list
 
