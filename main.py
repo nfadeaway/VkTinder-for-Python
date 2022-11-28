@@ -26,7 +26,7 @@ def listener(self_id, session):
     vkinder_user_city = vkinder_user_info['city']
     vkinder_user_sex = vkinder_user_info['sex']
     vkinder_user_age = vkinder_user_info['age']
-
+    back_keyboard = vk.keyboard()[2]
     regular_keyboard = vk.keyboard()[1]
     welcome_keyboard = vk.keyboard()[0]
 
@@ -45,18 +45,12 @@ def listener(self_id, session):
                                         "Пока не введёшь нормальный возраст, ничего не получится.")
 
     count = 100
-    age_step = 3
-    found_user = vk.vk_user.users.search(count=count, sex='1' if vkinder_user_sex == '2' else '2',
-                                         city=vkinder_user_city, age_from=str(int(vkinder_user_age) + age_step),
-                                         age_to=str(int(vkinder_user_age) + age_step), has_photo='1',
-                                         status='6', fields="city, bdate, sex")
-
-    user_list = found_user['items']
+    user_list = vk.search(vkinder_user_sex,vkinder_user_city, vkinder_user_age, count)
 
     if user_list:
         pass
     else:
-        vk.send_message(vk.vk_group_session, self_id, "Тебе пары не нашлось, попробуй скорректировать свои данные.",
+        vk.send_message(vk.vk_group_session, self_id, "Тебе пары не нашлось, попробуй скорректировать свои данные.\nМожет ты не указал свой город в личном профиле?",
                         keyboard=welcome_keyboard.get_keyboard())
         user_dict[self_id] = 1
         return
@@ -84,11 +78,6 @@ def listener(self_id, session):
         request_preferences = session.query(Preferences).filter_by(vk_id=self_id, watched_vk_id=user["id"]).all()
 
         if request_preferences:
-            vk.send_message(vk.vk_group_session, self_id, "попался аккаунт из списка предпочтений, ищем дальше...")
-            continue
-
-        if user['is_closed']:
-            vk.send_message(vk.vk_group_session, self_id, "попался закрытый аккаунт, ищем дальше...")
             continue
 
         user_photo_list = vk.vk_user.photos.get(owner_id=user["id"], album_id="profile", extended=1)
@@ -100,22 +89,19 @@ def listener(self_id, session):
                             f'photo{user["id"]}_{user_photos[1][0]},'
                             f'photo{user["id"]}_{user_photos[2][0]}', keyboard=regular_keyboard.get_keyboard())
         else:
-            vk.send_message(vk.vk_group_session, self_id, "у пользователя недостаточно фото, ищем дальше...")
             continue
 
         for event in vk.longpoll.listen():
             if event.type == VkBotEventType.MESSAGE_NEW:
                 if self_id == event.obj.message["from_id"]:
                     if event.obj.message["text"].lower() == "дальше":
-                        vk.send_message(vk.vk_group_session, event.obj.message["from_id"], text="ожидай...",
-                                        keyboard=regular_keyboard.get_keyboard())
                         break
 
                     if event.obj.message["text"].lower() == "в избранное":
                         session.add(Preferences(vk_id=self_id, watched_vk_id=user["id"], status_id=1))
                         session.commit()
                         vk.send_message(vk.vk_group_session, event.obj.message["from_id"],
-                                        text="добавили в избранное, ищем дальше...",
+                                        text=f"{user['first_name']} {user['last_name']} добавлен(-а) в избранное.",
                                         keyboard=regular_keyboard.get_keyboard())
                         break
 
@@ -123,7 +109,7 @@ def listener(self_id, session):
                         session.add(Preferences(vk_id=self_id, watched_vk_id=user["id"], status_id=2))
                         session.commit()
                         vk.send_message(vk.vk_group_session, event.obj.message["from_id"],
-                                        text="добавили в ЧС, ищем дальше...",
+                                        text=f"{user['first_name']} {user['last_name']} добавлен(-а) в ЧС.",
                                         keyboard=regular_keyboard.get_keyboard())
                         break
 
@@ -141,7 +127,7 @@ def listener(self_id, session):
                                             f'photo{user.watched_vk_id}_{user_photos[0][0]},'
                                             f'photo{user.watched_vk_id}_{user_photos[1][0]},'
                                             f'photo{user.watched_vk_id}_{user_photos[2][0]}',
-                                            keyboard=regular_keyboard.get_keyboard())
+                                            keyboard=back_keyboard.get_keyboard())
                         continue
 
                     elif event.obj.message["text"] == "выход":
@@ -157,7 +143,6 @@ def main():
     session = Session()
 
     welcome_keyboard = vk.keyboard()[0]
-
     for event in vk.longpoll.listen():
         if event.type == VkBotEventType.MESSAGE_NEW:
 
@@ -174,7 +159,7 @@ def main():
 
             elif event.obj.message["text"].lower() == "начать" and user_dict[event.obj.message["from_id"]] == 1:
                 self_id = event.obj.message["from_id"]
-                vk.send_message(vk.vk_group_session, event.obj.message["from_id"], text="вошли в поиск")
+                vk.send_message(vk.vk_group_session, event.obj.message["from_id"], text="Начинаем поиск")
                 user_dict[event.obj.message["from_id"]] = 2
                 inner_listen = Thread(target=listener, args=(self_id, session))
                 inner_listen.start()

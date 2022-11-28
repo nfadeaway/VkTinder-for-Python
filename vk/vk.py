@@ -17,6 +17,18 @@ class VK:
         self.vk_user = self.vk_user_session.get_api()
         self.longpoll = VkBotLongPoll(self.vk_group_session, group_id=os.getenv('GROUP_ID'))
 
+    def search(self, sex, city, age, count=1000, step=-3):
+        first_search = []
+        while step < 3:
+            first_search.extend(self.vk_user.users.search(count=count, sex='1' if sex == '2' else '2',
+                                                     city=city,
+                                                     age_from=str(int(age) + step),
+                                                     age_to=str(int(age) + step), has_photo='1',
+                                                     status='6', fields="city, bdate, sex")['items'])
+            step += 1
+        user_list = [user for user in [user for user in first_search if user['is_closed'] is False and 'city' in user] if str(user['city']['id']) == city]
+        return user_list
+
 
     def preview_photos(self, user_photo_list: list) -> list:
         preview_photo_list = [
@@ -63,4 +75,6 @@ class VK:
         regular_keyboard.add_button(label="В ЧС", color=VkKeyboardColor.NEGATIVE)
         regular_keyboard.add_line()
         regular_keyboard.add_button(label="Моё избранное", color=VkKeyboardColor.SECONDARY)
-        return welcome_keyboard, regular_keyboard
+        back_keyboard = VkKeyboard()
+        back_keyboard.add_button(label="Дальше", color=VkKeyboardColor.POSITIVE)
+        return welcome_keyboard, regular_keyboard, back_keyboard
