@@ -20,7 +20,6 @@ class VK:
     def search(self, sex, city, age, count=1000, step=-3):
         first_search = []
         for age_differ in range(step, -step + 1):
-            print(age_differ)
             first_search.extend(self.vk_user.users.search(count=count, sex='1' if sex == '2' else '2',
                                                      city=city,
                                                      age_from=str(int(age) + age_differ),
