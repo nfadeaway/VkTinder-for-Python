@@ -1,25 +1,8 @@
 import sqlalchemy as sq
-from sqlalchemy.orm import declarative_base, sessionmaker
-from dotenv import load_dotenv
-import os
+from sqlalchemy.orm import declarative_base
 
-load_dotenv()
 
 Base = declarative_base()
-
-
-def drop_tables(engine) -> None:
-    Base.metadata.drop_all(engine)
-
-
-def create_tables(engine) -> None:
-    Base.metadata.create_all(engine)
-
-
-def status_filler(session) -> None:
-    session.add(Status(name='favorite'))
-    session.add(Status(name='black list'))
-    session.commit()
 
 
 class Status(Base):
@@ -41,11 +24,3 @@ class Preferences(Base):
     watched_vk_id = sq.Column(sq.Integer)
     status_id = sq.Column(sq.Integer, sq.ForeignKey('status.id'))
 
-
-if __name__ == '__main__':
-    engine = sq.create_engine(os.getenv('DSN'))
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    drop_tables(engine)
-    create_tables(engine)
-    status_filler(session)

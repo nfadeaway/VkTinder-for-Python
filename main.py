@@ -1,26 +1,17 @@
-from dotenv import load_dotenv
-import os
 from vk_api.bot_longpoll import VkBotEventType
+from database.db import DB
 from vk.vk import VK
 from threading import Thread
-from database.database import User, Preferences
-import sqlalchemy as sq
-from sqlalchemy.orm import sessionmaker
 import random
 
-load_dotenv()
 
 user_dict = {}
 vk = VK()
+db = DB()
 
 
 def listener(self_id, session):
-    user = session.query(User).filter_by(vk_id=self_id).all()
-    if user:
-        pass
-    else:
-        session.add(User(vk_id=self_id))
-        session.commit()
+    db.check_user(self_id)
 
     vkinder_user_info = vk.profile_info(self_id)
     vkinder_user_city = vkinder_user_info['city']
@@ -42,13 +33,15 @@ def listener(self_id, session):
                         break
                     else:
                         vk.send_message(vk.vk_group_session, self_id,
-                                        "Пока не введёшь нормальный возраст, ничего не получится. (доступный диапазон 18-100)")
+                                        "Пока не введёшь нормальный возраст, ничего не получится. (доступный диапазон "
+                                        "18-100)")
 
     count = 100
-    user_list = vk.search(vkinder_user_sex,vkinder_user_city, vkinder_user_age, count)
+    user_list = vk.search(vkinder_user_sex, vkinder_user_city, vkinder_user_age, count)
 
     if not user_list:
-        vk.send_message(vk.vk_group_session, self_id, "Тебе пары не нашлось, попробуй скорректировать свои данные.\nМожет ты не указал свой город в личном профиле?",
+        vk.send_message(vk.vk_group_session, self_id, "Тебе пары не нашлось, попробуй скорректировать свои "
+                                                      "данные.\nМожет ты не указал свой город в личном профиле?",
                         keyboard=welcome_keyboard.get_keyboard())
         user_dict[self_id] = 1
         return
@@ -73,9 +66,7 @@ def listener(self_id, session):
                             keyboard=welcome_keyboard.get_keyboard())
             break
 
-        request_preferences = session.query(Preferences).filter_by(vk_id=self_id, watched_vk_id=user["id"]).all()
-
-        if request_preferences:
+        if db.request_preferences(self_id, user["id"]):
             continue
 
         user_photo_list = vk.vk_user.photos.get(owner_id=user["id"], album_id="profile", extended=1)
@@ -96,35 +87,33 @@ def listener(self_id, session):
                         break
 
                     if event.obj.message["text"].lower() == "в избранное":
-                        session.add(Preferences(vk_id=self_id, watched_vk_id=user["id"], status_id=1))
-                        session.commit()
+                        db.add_favorite(self_id, user["id"])
                         vk.send_message(vk.vk_group_session, event.obj.message["from_id"],
                                         text=f"{user['first_name']} {user['last_name']} добавлен(-а) в избранное.",
                                         keyboard=regular_keyboard.get_keyboard())
                         break
 
                     if event.obj.message["text"].lower() == "в чс":
-                        session.add(Preferences(vk_id=self_id, watched_vk_id=user["id"], status_id=2))
-                        session.commit()
+                        db.add_blacklist(self_id, user["id"])
                         vk.send_message(vk.vk_group_session, event.obj.message["from_id"],
                                         text=f"{user['first_name']} {user['last_name']} добавлен(-а) в ЧС.",
                                         keyboard=regular_keyboard.get_keyboard())
                         break
 
                     if event.obj.message["text"].lower() == "моё избранное":
-                        request_favorite_list = session.query(Preferences).filter_by(vk_id=self_id, status_id=1).all()
-                        for user in request_favorite_list:
-                            data = vk.vk_user.users.get(user_id=user.watched_vk_id, fields="first_name, last_name")
+                        request_favorite_list = db.request_favorite_list(self_id)
+                        for favorite_user in request_favorite_list:
+                            data = vk.vk_user.users.get(user_id=favorite_user.watched_vk_id, fields="first_name, last_name")
                             first_name = data[0]['first_name']
                             last_name = data[0]['last_name']
-                            user_photo_list = vk.vk_user.photos.get(owner_id=user.watched_vk_id, album_id="profile",
+                            user_photo_list = vk.vk_user.photos.get(owner_id=favorite_user.watched_vk_id, album_id="profile",
                                                                     extended=1)
                             user_photos = vk.preview_photos(user_photo_list)
                             vk.send_message(vk.vk_group_session, self_id, f'{first_name} {last_name}\n'
-                                                                          f'https://vk.com/id{user.watched_vk_id}\n',
-                                            f'photo{user.watched_vk_id}_{user_photos[0][0]},'
-                                            f'photo{user.watched_vk_id}_{user_photos[1][0]},'
-                                            f'photo{user.watched_vk_id}_{user_photos[2][0]}',
+                                                                          f'https://vk.com/id{favorite_user.watched_vk_id}\n',
+                                            f'photo{favorite_user.watched_vk_id}_{user_photos[0][0]},'
+                                            f'photo{favorite_user.watched_vk_id}_{user_photos[1][0]},'
+                                            f'photo{favorite_user.watched_vk_id}_{user_photos[2][0]}',
                                             keyboard=back_keyboard.get_keyboard())
                         continue
 
@@ -135,12 +124,13 @@ def listener(self_id, session):
 
 
 def main():
-    engine = sq.create_engine(os.getenv('DSN'))
-
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
+    # Блок создания таблиц (необходим лишь для первого запуска)
+    db.drop_tables()
+    db.create_tables()
+    db.status_filler()
+    # ---------------------------------------------------------
     welcome_keyboard = vk.keyboard()[0]
+
     for event in vk.longpoll.listen():
         if event.type == VkBotEventType.MESSAGE_NEW:
 
@@ -159,7 +149,7 @@ def main():
                 self_id = event.obj.message["from_id"]
                 vk.send_message(vk.vk_group_session, event.obj.message["from_id"], text="Начинаем поиск")
                 user_dict[event.obj.message["from_id"]] = 2
-                inner_listen = Thread(target=listener, args=(self_id, session))
+                inner_listen = Thread(target=listener, args=(self_id, db.session))
                 inner_listen.start()
 
 
