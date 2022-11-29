@@ -26,22 +26,22 @@ class DB:
         self.session.add(Status(name='black list'))
         self.session.commit()
 
-    def check_user(self, self_id) -> None:
+    def check_user(self, self_id: int) -> None:
         user = self.session.query(User).filter_by(vk_id=self_id).all()
         if not user:
             self.session.add(User(vk_id=self_id))
             self.session.commit()
 
-    def request_preferences(self, self_id, user_id) -> list:
+    def request_preferences(self, self_id: int, user_id: int) -> list:
         return self.session.query(Preferences).filter_by(vk_id=self_id, watched_vk_id=user_id).all()
 
-    def add_favorite(self, self_id, user_id):
+    def add_favorite(self, self_id: int, user_id: int) -> None:
         self.session.add(Preferences(vk_id=self_id, watched_vk_id=user_id, status_id=1))
         self.session.commit()
 
-    def add_blacklist(self, self_id, user_id):
+    def add_blacklist(self, self_id: int, user_id: int) -> None:
         self.session.add(Preferences(vk_id=self_id, watched_vk_id=user_id, status_id=2))
         self.session.commit()
 
-    def request_favorite_list(self, self_id) -> list:
+    def request_favorite_list(self, self_id: int) -> list:
         return self.session.query(Preferences).filter_by(vk_id=self_id, status_id=1).all()
